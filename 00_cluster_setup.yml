@@ -19,6 +19,7 @@
       hostname: 192.168.0.102
       username: admin
       password: ""
+      validate_certs: false
     register: ontap
     delegate_to: localhost
       
