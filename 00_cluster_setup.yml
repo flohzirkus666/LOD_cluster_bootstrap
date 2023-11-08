@@ -49,7 +49,7 @@
         nodes:
           - cluster_interface:
             ip:
-              address: "{{ ontap.ontap_info.cluster_nodes.records | map(attribute='cluster_interfaces') | map(attribute='address') | random }}"
+              address: "{{ ontap.ontap_info.cluster_nodes.records | map(attribute='cluster_interfaces') | selectattr('type', 'equalto', 'address') | random }}"
         password: netapp123
       status_code: 201
       delegate_to: localhost
