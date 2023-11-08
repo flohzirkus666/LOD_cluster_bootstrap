@@ -66,8 +66,8 @@ tasks:
       license_codes:
         - "{{ lookup('file', item) | string }}"
       loop:
-        - NLF-000000000070-LOD_Bundle.txt
-        - NLF-000000000071-LOD_Bundle.txt
+        - "NLF/NLF-000000000070-LOD_Bundle.txt"
+        - "NLF/NLF-000000000071-LOD_Bundle.txt"
 
   - name: Create data aggregate
     netapp.ontap.na_ontap_aggregate:
