@@ -1,0 +1,16 @@
+---
+- hosts: linuxservers
+  gather_facts: yes
+  tasks:
+  - name: Mount volume
+    ansible.posix.mount:
+      src: 192.168.0.121:/svm0_vol1
+      path: /mnt/svm0_vol1
+      state: mounted
+      fstype: nfs
+
+  - name: Create multiple files
+    ansible.builtin.file:
+      path: "/mnt/svm0_vol1/file0{{ item }}.txt"
+      state: touch
+    with_sequence: start=1, end=9

@@ -1,0 +1,5 @@
+linuxervers:
+  rhel1.demo.netapp.com
+  
+ontapclusters:
+  cluster1.demo.netapp.com
