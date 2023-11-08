@@ -1,5 +1,7 @@
 linuxervers:
-  rhel1.demo.netapp.com
-  
+  hosts:
+    rhel1.demo.netapp.com
+
 ontapclusters:
-  cluster1.demo.netapp.com
+  hosts:
+    cluster1.demo.netapp.com
