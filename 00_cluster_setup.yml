@@ -53,100 +53,100 @@
       status_code: 201
       delegate_to: localhost
 
-    - name: Wait until cluster mgmt is online
-      ansible.builtin.wait_for:
-        host: "{{ netapp_hostname }}"
-        port: 443
-        delay: 60
-      delegate_to: localhost
+  - name: Wait until cluster mgmt is online
+    ansible.builtin.wait_for:
+      host: "{{ inventory_hostname }}"
+      port: 443
+      delay: 60
+    delegate_to: localhost
 
-    - name: Adding NLFs to cluster
-      netapp.ontap.na_ontap_license:
-        state: present
-        license_codes:
-          - "{{ lookup('file', item) | string }}"
-        loop:
-          - "NLF/NLF-000000000070-LOD_Bundle.txt"
-          - "NLF/NLF-000000000071-LOD_Bundle.txt"
-
-    - name: Create data aggregate
-      netapp.ontap.na_ontap_aggregate:
-        state: present
-        name: aggr_cluster1_data1
-        disk_count: 20
-        nodes: cluster1_01
-        <<: *login
-      delegate_to: localhost
-
-    - name: Create CIFS/NFS SVM
-      netapp.ontap.na_ontap_svm:
-        state: present
-        name: svm0
-        services:
-          cifs:
-            allowed: true
-          nfs:
-            allowed: true
-            enabled: true
-        <<: *login
-      delegate_to: localhost
-
-    - name: Create CIFS/NFS lif
-      netapp.ontap.na_ontap_interface:
-        state: presemt
-        interface_name: "svm0_{{ item.name }}"
-        home_port: e0c
-        home_node: "{{ item.node }}"
-        service-policy: default-data-files
-        interface_type: ip
-        address: "{{ item.address }}"
-        netmask: "{{ item.netmask }}"
-        <<: *login
+  - name: Adding NLFs to cluster
+    netapp.ontap.na_ontap_license:
+      state: present
+      license_codes:
+        - "{{ lookup('file', item) | string }}"
       loop:
-        - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
-        - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
-      delegate_to: localhost
+        - "NLF/NLF-000000000070-LOD_Bundle.txt"
+        - "NLF/NLF-000000000071-LOD_Bundle.txt"
 
-    - name: Configuring DNS
-      netapp.ontap.na_ontap_dns:
-        state: present
-        domains: demo.netapp.com
-        nameservers: 192.168.0.253
-        <<: *login
-      delegate_to: localhost
+  - name: Create data aggregate
+    netapp.ontap.na_ontap_aggregate:
+      state: present
+      name: aggr_cluster1_data1
+      disk_count: 20
+      nodes: cluster1_01
+      <<: *login
+    delegate_to: localhost
 
-    - name: Create CIFS server
-        netapp.ontap.na_ontap_cifs_server:
-        state: present
-        name: svm0
-        vserver: svm0
-        service_state: started
-        domain: demo.netapp.com
-        admin_user_name: Administrator
-        admin_password: Netapp1!
-        <<: *login
-      delegate_to: localhost
+  - name: Create CIFS/NFS SVM
+    netapp.ontap.na_ontap_svm:
+      state: present
+      name: svm0
+      services:
+        cifs:
+          allowed: true
+        nfs:
+          allowed: true
+          enabled: true
+      <<: *login
+    delegate_to: localhost
 
-    - name: Create volume
-      netapp.ontap.na_ontap_volume:
-        state: present
-        name: svm0_vol1
-        size: 5
-        size_unit: gb
-        space_guarantee: none
-        export_policy: default
-        vserver: svm0
-        junction_path: "/svm0_vol1"
-        <<: *login
-      delegate_to: localhost
+  - name: Create CIFS/NFS lif
+    netapp.ontap.na_ontap_interface:
+      state: presemt
+      interface_name: "svm0_{{ item.name }}"
+      home_port: e0c
+      home_node: "{{ item.node }}"
+      service-policy: default-data-files
+      interface_type: ip
+      address: "{{ item.address }}"
+      netmask: "{{ item.netmask }}"
+      <<: *login
+    loop:
+      - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
+      - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
+    delegate_to: localhost
 
-    - name: Adding rule to default export policy
-      netapp.ontap.na_ontap_export_policy:
-        state: present
-        name: default
-        client_math: 0.0.0.0/0
-        ro_rule: any
-        rw_rule: any
-        protocol: nfs
-        <<: *login
-      delegate_to: localhost
+  - name: Configuring DNS
+    netapp.ontap.na_ontap_dns:
+      state: present
+      domains: demo.netapp.com
+      nameservers: 192.168.0.253
+      <<: *login
+    delegate_to: localhost
+
+  - name: Create CIFS server
+      netapp.ontap.na_ontap_cifs_server:
+      state: present
+      name: svm0
+      vserver: svm0
+      service_state: started
+      domain: demo.netapp.com
+      admin_user_name: Administrator
+      admin_password: Netapp1!
+      <<: *login
+    delegate_to: localhost
+
+  - name: Create volume
+    netapp.ontap.na_ontap_volume:
+      state: present
+      name: svm0_vol1
+      size: 5
+      size_unit: gb
+      space_guarantee: none
+      export_policy: default
+      vserver: svm0
+      junction_path: "/svm0_vol1"
+      <<: *login
+    delegate_to: localhost
+
+  - name: Adding rule to default export policy
+    netapp.ontap.na_ontap_export_policy:
+      state: present
+      name: default
+      client_math: 0.0.0.0/0
+      ro_rule: any
+      rw_rule: any
+      protocol: nfs
+      <<: *login
+    delegate_to: localhost
