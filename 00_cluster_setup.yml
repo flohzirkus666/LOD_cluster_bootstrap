@@ -116,7 +116,7 @@
     delegate_to: localhost
 
   - name: Create CIFS server
-      netapp.ontap.na_ontap_cifs_server:
+    netapp.ontap.na_ontap_cifs_server:
       state: present
       name: svm0
       vserver: svm0
