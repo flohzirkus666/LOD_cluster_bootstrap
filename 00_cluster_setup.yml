@@ -1,152 +1,153 @@
 ---
 - hosts: ontapclusters
-vars:
-  login: &login
-    hostname: "{{ inventory_hostname }}"
-    username: admin
-    password: netapp123
-    validate_certs: false
-
-gather_facts: no
-tasks:
-- name: Get node mgmt interfaces from partner node
-  netapp.ontap.na_ontap_rest_info:
-    gather_subset:
-      - cluster/nodes
-    fields:
-      - cluster_interfaces
-    use_python_keys: true
-    hostname: 192.168.0.102
-    username: admin
-    password: ""
-  register: ontap
-  delegate_to: localhost
-    
-- name: Create cluster using URI module
-  ansible.builtin.uri:
-    url: "https://192.168.0.101/api/cluster"
-        force_basic_auth: true
-    user: admin
-    password: "" # there is no passwort set at this point
-    method: POST
-    body_format: json
-    body:
-      name: cluster1
-      location: Brewery
-      contact: me
-      dns_domains:
-      - demo.netapp.com
-      name_servers:
-      - 192.168.0.253
-      ntp_servers:
-      - 192.168.0.253
-      management_interface:
-        ip:
-          address: 192.168.0.111
-          netmask: 255.255.255.0
-          gateway: 192.168.0.1
-      nodes:
-        - cluster_interface:
-          ip:
-            address: "{{ ontap.ontap_info.cluster.nodes | map(attribute='cluster_interface') | map(attributes='address') | random }}"
+  vars:
+    login: &login
+      hostname: "{{ inventory_hostname }}"
+      username: admin
       password: netapp123
-    status_code: 201
-    delegate_to: localhost
+      validate_certs: false
 
-  - name: Wait until cluster mgmt is online
-    ansible.builtin.wait_for:
-      host: "{{ netapp_hostname }}"
-      port: 443
-      delay: 60
+  gather_facts: no
+  tasks:
+  - name: Get node mgmt interfaces from partner node
+    netapp.ontap.na_ontap_rest_info:
+      gather_subset:
+        - cluster/nodes
+      fields:
+        - cluster_interfaces
+      use_python_keys: true
+      hostname: 192.168.0.102
+      username: admin
+      password: ""
+    register: ontap
     delegate_to: localhost
+      
+  - name: Create cluster using URI module
+    ansible.builtin.uri:
+      url: "https://192.168.0.101/api/cluster"
+          force_basic_auth: true
+      user: admin
+      password: "" # there is no passwort set at this point
+      method: POST
+      body_format: json
+      body:
+        name: cluster1
+        location: Brewery
+        contact: me
+        dns_domains:
+        - demo.netapp.com
+        name_servers:
+        - 192.168.0.253
+        ntp_servers:
+        - 192.168.0.253
+        management_interface:
+          ip:
+            address: 192.168.0.111
+            netmask: 255.255.255.0
+            gateway: 192.168.0.1
+        nodes:
+          - cluster_interface:
+            ip:
+              address: "{{ ontap.ontap_info.cluster.nodes | map(attribute='cluster_interface') | map(attributes='address') | random }}"
+        password: netapp123
+      status_code: 201
+      delegate_to: localhost
 
-  - name: Adding NLFs to cluster
-    netapp.ontap.na_ontap_license:
-      state: present
-      license_codes:
-        - "{{ lookup('file', item) | string }}"
+    - name: Wait until cluster mgmt is online
+      ansible.builtin.wait_for:
+        host: "{{ netapp_hostname }}"
+        port: 443
+        delay: 60
+      delegate_to: localhost
+
+    - name: Adding NLFs to cluster
+      netapp.ontap.na_ontap_license:
+        state: present
+        license_codes:
+          - "{{ lookup('file', item) | string }}"
+        loop:
+          - "NLF/NLF-000000000070-LOD_Bundle.txt"
+          - "NLF/NLF-000000000071-LOD_Bundle.txt"
+
+    - name: Create data aggregate
+      netapp.ontap.na_ontap_aggregate:
+        state: present
+        name: aggr_cluster1_data1
+        disk_count: 20
+        nodes: cluster1_01
+        <<: *login
+      delegate_to: localhost
+
+    - name: Create CIFS/NFS SVM
+      netapp.ontap.na_ontap_svm:
+        state: present
+        name: svm0
+        services:
+          cifs:
+            allowed: true
+          nfs:
+            allowed: true
+            enabled: true
+        <<: *login
+      delegate_to: localhost
+
+    - name: Create CIFS/NFS lif
+      netapp.ontap.na_ontap_interface:
+        state: presemt
+        interface_name: "svm0_{{ item.name }}"
+        home_port: e0c
+        home_node: "{{ item.node }}"
+        service-policy: default-data-files
+        interface_type: ip
+        address: "{{ item.address }}"
+        netmask: "{{ item.netmask }}"
+        <<: *login
       loop:
-        - "NLF/NLF-000000000070-LOD_Bundle.txt"
-        - "NLF/NLF-000000000071-LOD_Bundle.txt"
+        - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
+        - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
+      delegate_to: localhost
 
-  - name: Create data aggregate
-    netapp.ontap.na_ontap_aggregate:
-      state: present
-      name: aggr_cluster1_data1
-      disk_count: 20
-      nodes: cluster1_01
-      <<: *login
-    delegate_to: localhost
+    - name: Configuring DNS
+      netapp.ontap.na_ontap_dns:
+        state: present
+        domains: demo.netapp.com
+        nameservers: 192.168.0.253
+        <<: *login
+      delegate_to: localhost
 
-  - name: Create CIFS/NFS SVM
-    netapp.ontap.na_ontap_svm:
-      state: present
-      name: svm0
-      services:
-        cifs:
-          allowed: true
-        nfs:
-          allowed: true
-          enabled: true
-      <<: *login
-    delegate_to: localhost
+    - name: Create CIFS server
+        netapp.ontap.na_ontap_cifs_server:
+        state: present
+        name: svm0
+        vserver: svm0
+        service_state: started
+        domain: demo.netapp.com
+        admin_user_name: Administrator
+        admin_password: Netapp1!
+        <<: *login
+      delegate_to: localhost
 
-  - name: Create CIFS/NFS lif
-    netapp.ontap.na_ontap_interface:
-      state: presemt
-      interface_name: "svm0_{{ item.name }}"
-      home_port: e0c
-      home_node: "{{ item.node }}"
-      service-policy: default-data-files
-      interface_type: ip
-      address: "{{ item.address }}"
-      netmask: "{{ item.netmask }}"
-      <<: *login
-    loop:
-      - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
-      - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
-    delegate_to: localhost
+    - name: Create volume
+      netapp.ontap.na_ontap_volume:
+        state: present
+        name: svm0_vol1
+        size: 5
+        size_unit: gb
+        space_guarantee: none
+        export_policy: default
+        vserver: svm0
+        junction_path: "/svm0_vol1"
+        <<: *login
+      delegate_to: localhost
 
-  - name: Configuring DNS
-    netapp.ontap.na_ontap_dns:
-      state: present
-      domains: demo.netapp.com
-      nameservers: 192.168.0.253
-      <<: *login
-    delegate_to: localhost
-
-  - name: Create CIFS server
-      netapp.ontap.na_ontap_cifs_server:
-      state: present
-      name: svm0
-      vserver: svm0
-      service_state: started
-      domain: demo.netapp.com
-      admin_user_name: Administrator
-      admin_password: Netapp1!
-      <<: *login
-    delegate_to: localhost
-
-  - name: Create volume
-    netapp.ontap.na_ontap_volume:
-      state: present
-      name: svm0_vol1
-      size: 5
-      size_unit: gb
-      space_guarantee: none
-      export_policy: default
-      vserver: svm0
-      junction_path: "/svm0_vol1"
-      <<: *login
-    delegate_to: localhost
-
-  - name: Adding rule to default export policy
-    netapp.ontap.na_ontap_export_policy:
-      state: present
-      name: default
-      client_math: 0.0.0.0/0
-      ro_rule: any
-      rw_rule: any
-      protocol: nfs
-      <<: *login
-    delegate_to: localhost
+    - name: Adding rule to default export policy
+      netapp.ontap.na_ontap_export_policy:
+        state: present
+        name: default
+        client_math: 0.0.0.0/0
+        ro_rule: any
+        rw_rule: any
+        protocol: nfs
+        <<: *login
+      delegate_to: localhost
+      
