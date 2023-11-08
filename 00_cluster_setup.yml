@@ -9,19 +9,22 @@
 
   gather_facts: no
   tasks:
-  - name: Get node mgmt interfaces from partner node
-    netapp.ontap.na_ontap_rest_info:
-      gather_subset:
-        - cluster/nodes
-      fields:
-        - cluster_interfaces
-      use_python_keys: true
-      hostname: 192.168.0.102
+  - name: Change intercluster IPs
+    netapp.ontap.na_ontap_interface:
+      state: present
+      interface_name: "{{ item.name }}"
+      address: "{{ item.address }}"
+      hostname: "{{ item.hostname }}"
       username: admin
       password: ""
       validate_certs: false
-    register: ontap
+    loop:
+      - {"name": "clus1", "address": "169.254.0.111", "hostname": "192.168.0.101"}
+      - {"name": "clus2", "address": "169.254.0.112", "hostname": "192.168.0.101"}
+      - {"name": "clus1", "address": "169.254.0.113", "hostname": "192.168.0.102"}
+      - {"name": "clus2", "address": "169.254.0.114", "hostname": "192.168.0.102"}
     delegate_to: localhost
+
       
   - name: Create cluster using URI module
     ansible.builtin.uri:
@@ -49,7 +52,7 @@
         nodes:
           - cluster_interface:
             ip:
-              address: "{{ ontap.ontap_info.cluster_nodes.records | map(attribute='address') | selectattr('address', 'defined') | map(attribute='ip') | random }}"
+              address: 169.254.0.113
         password: netapp123
       status_code: 201
       delegate_to: localhost
