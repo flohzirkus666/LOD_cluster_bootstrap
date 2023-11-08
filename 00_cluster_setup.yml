@@ -35,11 +35,11 @@
         location: Brewery
         contact: me
         dns_domains:
-        - demo.netapp.com
+          - demo.netapp.com
         name_servers:
-        - 192.168.0.253
+          - 192.168.0.253
         ntp_servers:
-        - 192.168.0.253
+          - 192.168.0.253
         management_interface:
           ip:
             address: 192.168.0.111
