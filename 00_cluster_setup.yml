@@ -9,10 +9,11 @@
 
   gather_facts: no
   tasks:
-  - name: Change intercluster IPs
+  - name: Change LIF IPs
     netapp.ontap.na_ontap_interface:
       state: present
       interface_name: "{{ item.name }}"
+      vserver: Cluster
       address: "{{ item.address }}"
       hostname: "{{ item.hostname }}"
       username: admin
