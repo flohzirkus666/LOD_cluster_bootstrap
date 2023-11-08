@@ -25,7 +25,7 @@
   - name: Create cluster using URI module
     ansible.builtin.uri:
       url: "https://192.168.0.101/api/cluster"
-          force_basic_auth: true
+      force_basic_auth: true
       user: admin
       password: "" # there is no passwort set at this point
       method: POST
@@ -150,4 +150,3 @@
         protocol: nfs
         <<: *login
       delegate_to: localhost
-      
