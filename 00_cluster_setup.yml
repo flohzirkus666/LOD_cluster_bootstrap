@@ -117,10 +117,12 @@
   - name: Create CIFS/NFS lif
     netapp.ontap.na_ontap_interface:
       state: present
+      vserver: svm0
       interface_name: "svm0_{{ item.name }}"
       home_port: e0c
       home_node: "{{ item.node }}"
-      service-policy: default-data-files
+      ipspace: Default
+      service_policy: default-data-files
       interface_type: ip
       address: "{{ item.address }}"
       netmask: "{{ item.netmask }}"
@@ -133,6 +135,7 @@
   - name: Configuring DNS
     netapp.ontap.na_ontap_dns:
       state: present
+      vserver: svm0
       domains: demo.netapp.com
       nameservers: 192.168.0.253
       <<: *login
@@ -154,6 +157,7 @@
     netapp.ontap.na_ontap_volume:
       state: present
       name: svm0_vol1
+      aggregate_name: aggr_cluster1_01_data1
       size: 5
       size_unit: gb
       space_guarantee: none
@@ -166,6 +170,7 @@
   - name: Adding rule to default export policy
     netapp.ontap.na_ontap_export_policy:
       state: present
+      vserver: svm0
       name: default
       client_math: 0.0.0.0/0
       ro_rule: any
