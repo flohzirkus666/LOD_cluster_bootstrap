@@ -77,7 +77,8 @@
     ansible.builtin.wait_for:
       host: "{{ inventory_hostname }}"
       port: 443
-      delay: 60
+      delay: 30
+      sleep: 5
     delegate_to: localhost
 
   - name: Adding NLFs to cluster
@@ -119,7 +120,7 @@
       state: present
       vserver: svm0
       interface_name: "svm0_{{ item.name }}"
-      home_port: e0c
+      home_port: e0d
       home_node: "{{ item.node }}"
       ipspace: Default
       service_policy: default-data-files
@@ -131,6 +132,10 @@
       - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
       - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
     delegate_to: localhost
+
+  - name: Add route to svm0
+    netapp.ontap.na_ontap_route:
+
 
   - name: Configuring DNS
     netapp.ontap.na_ontap_dns:
@@ -168,13 +173,13 @@
     delegate_to: localhost
 
   - name: Adding rule to default export policy
-    netapp.ontap.na_ontap_export_policy:
+    netapp.ontap.na_ontap_export_policy_rule:
       state: present
       vserver: svm0
       name: default
-      client_math: 0.0.0.0/0
+      client_match: 192.168.0.0/24
       ro_rule: any
       rw_rule: any
-      protocol: nfs
+      protocol: nfs3
       <<: *login
     delegate_to: localhost
