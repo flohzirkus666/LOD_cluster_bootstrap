@@ -92,9 +92,9 @@
   - name: Create data aggregate
     netapp.ontap.na_ontap_aggregate:
       state: present
-      name: aggr_cluster1_data1
+      name: "{{ item.name }}"
       disk_count: 22
-      nodes: cluster1-01
+      nodes: "{{ item.node }}"
       <<: *login
     loop:
       - {"name": "aggr_cluster1_01_data1", "node": "cluster1-01"}
@@ -116,7 +116,7 @@
 
   - name: Create CIFS/NFS lif
     netapp.ontap.na_ontap_interface:
-      state: presemt
+      state: present
       interface_name: "svm0_{{ item.name }}"
       home_port: e0c
       home_node: "{{ item.node }}"
