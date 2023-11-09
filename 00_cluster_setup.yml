@@ -4,8 +4,9 @@
     login: &login
       hostname: "{{ inventory_hostname }}"
       username: admin
-      password: netapp123
+      password: Netapp1!
       validate_certs: false
+      use_rest: always
 
   gather_facts: no
   tasks:
@@ -68,7 +69,7 @@
           management_interface:
             ip:
               address: 192.168.0.102
-      status_code: 201
+      status_code: 202
       validate_certs: false
     delegate_to: localhost
 
@@ -83,18 +84,21 @@
     netapp.ontap.na_ontap_license:
       state: present
       license_codes:
-        - "{{ lookup('file', item) | string }}"
-      loop:
-        - "NLF/NLF-000000000070-LOD_Bundle.txt"
-        - "NLF/NLF-000000000071-LOD_Bundle.txt"
+        - "{{ lookup('file', 'NLF/NLF-000000000070-LOD_Bundle.txt') | string }}"
+        - "{{ lookup('file', 'NLF/NLF-000000000071-LOD_Bundle.txt') | string }}"
+       <<: *login
+    delegate_to: localhost     
 
   - name: Create data aggregate
     netapp.ontap.na_ontap_aggregate:
       state: present
       name: aggr_cluster1_data1
-      disk_count: 20
-      nodes: cluster1_01
+      disk_count: 22
+      nodes: cluster1-01
       <<: *login
+    loop:
+      - {"name": "aggr_cluster1_01_data1", "node": "cluster1-01"}
+      - {"name": "aggr_cluster1_02_data1", "node": "cluster1-02"}
     delegate_to: localhost
 
   - name: Create CIFS/NFS SVM
