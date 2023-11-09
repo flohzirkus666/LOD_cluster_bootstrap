@@ -94,7 +94,7 @@
     netapp.ontap.na_ontap_aggregate:
       state: present
       name: "{{ item.name }}"
-      disk_count: 22
+      disk_count: 10
       nodes: "{{ item.node }}"
       <<: *login
     loop:
@@ -176,6 +176,7 @@
       client_match: 192.168.0.0/24
       ro_rule: any
       rw_rule: any
+      super_user_security: any
       protocol: nfs3
       <<: *login
     delegate_to: localhost
