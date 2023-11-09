@@ -41,12 +41,13 @@
         name: cluster1
         location: Brewery
         contact: me
+        password: "Netapp1!"
         dns_domains:
-          - demo.netapp.com
+        - demo.netapp.com
         name_servers:
-          - 192.168.0.253
+        - 192.168.0.253
         ntp_servers:
-          - 192.168.0.253
+        - 192.168.0.253
         management_interface:
           ip:
             address: 192.168.0.111
@@ -56,7 +57,17 @@
         - cluster_interface:
           ip:
             address: 169.254.0.113
-        password: netapp123
+          name: cluster1-02
+          management_interface:
+            ip:
+              address: 192.168.0.102
+        - cluster_interface:
+          ip:
+            address: 169.254.0.111
+          name: cluster1-01
+          management_interface:
+            ip:
+              address: 192.168.0.101
       status_code: 201
       validate_certs: false
     delegate_to: localhost
