@@ -58,6 +58,7 @@
               address: 169.254.0.113
         password: netapp123
       status_code: 201
+      validate_certs: false
       delegate_to: localhost
 
   - name: Wait until cluster mgmt is online
