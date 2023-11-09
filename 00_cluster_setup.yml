@@ -77,7 +77,7 @@
     ansible.builtin.wait_for:
       host: "{{ inventory_hostname }}"
       port: 443
-      delay: 30
+      delay: 180
       sleep: 5
     delegate_to: localhost
 
@@ -87,7 +87,7 @@
       license_codes:
         - "{{ lookup('file', 'NLF/NLF-000000000070-LOD_Bundle.txt') | string }}"
         - "{{ lookup('file', 'NLF/NLF-000000000071-LOD_Bundle.txt') | string }}"
-       <<: *login
+      <<: *login
     delegate_to: localhost     
 
   - name: Create data aggregate
@@ -132,10 +132,6 @@
       - {"name": "lif1", "address": "192.168.0.131", "netmask": "255.255.255.0", "node": "cluster1-01"}
       - {"name": "lif1", "address": "192.168.0.132", "netmask": "255.255.255.0", "node": "cluster1-02"}
     delegate_to: localhost
-
-  - name: Add route to svm0
-    netapp.ontap.na_ontap_route:
-
 
   - name: Configuring DNS
     netapp.ontap.na_ontap_dns:
