@@ -53,9 +53,9 @@
             netmask: 255.255.255.0
             gateway: 192.168.0.1
         nodes:
-          - cluster_interface:
-            ip:
-              address: 169.254.0.113
+        - cluster_interface:
+          ip:
+            address: 169.254.0.113
         password: netapp123
       status_code: 201
       validate_certs: false
