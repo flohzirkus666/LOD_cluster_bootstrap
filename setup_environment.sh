@@ -19,4 +19,3 @@ git clone -b feature/enhanced_cluster_setup https://github.com/flohzirkus666/net
 
 echo "Installing galaxy collection"
 ansible-galaxy collection install netapp.ontap
-

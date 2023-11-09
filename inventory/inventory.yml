@@ -5,3 +5,7 @@ linuxervers:
 ontapclusters:
   hosts:
     cluster1.demo.netapp.com
+
+windows:
+  hosts:
+    jumphost.demo.netapp.com
