@@ -59,7 +59,7 @@
         password: netapp123
       status_code: 201
       validate_certs: false
-      delegate_to: localhost
+    delegate_to: localhost
 
   - name: Wait until cluster mgmt is online
     ansible.builtin.wait_for:
