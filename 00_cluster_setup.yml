@@ -19,6 +19,8 @@
       username: admin
       password: ""
       validate_certs: false
+      use_rest: never
+      https: yes
     loop:
       - {"name": "clus1", "address": "169.254.0.111", "hostname": "192.168.0.101"}
       - {"name": "clus2", "address": "169.254.0.112", "hostname": "192.168.0.101"}
