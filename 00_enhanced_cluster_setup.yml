@@ -1,0 +1,44 @@
+---
+- hosts: ontapclusters
+  vars:
+    login: &login
+      hostname: "{{ inventory_hostname }}"
+      username: admin
+      password: Netapp1!
+      validate_certs: false
+      use_rest: always
+
+  gather_facts: no
+  tasks:
+  - name: Change LIF IPs
+    netapp.ontap.na_ontap_interface:
+      state: present
+      interface_name: "{{ item.name }}"
+      vserver: Cluster
+      address: "{{ item.address }}"
+      hostname: "{{ item.hostname }}"
+      username: admin
+      password: ""
+      validate_certs: false
+      use_rest: never
+      https: yes
+    loop:
+      - {"name": "clus1", "address": "169.254.0.111", "hostname": "192.168.0.101"}
+      - {"name": "clus2", "address": "169.254.0.112", "hostname": "192.168.0.101"}
+      - {"name": "clus1", "address": "169.254.0.113", "hostname": "192.168.0.102"}
+      - {"name": "clus2", "address": "169.254.0.114", "hostname": "192.168.0.102"}
+    delegate_to: localhost
+
+  - name: Create cluster using enhanced module
+    netapp.ontap.na_ontap_cluster:
+      state: present
+      cluster_name: cluster1
+      hostname: 192.168.0.101
+      username: admin
+      password: ""
+      cluster_ip_address: 169.254.0.113
+      cluster_password: Netapp1!
+      timezone: Europe/Zurich
+      domains: demo.netapp.com
+      name_servers: 192.168.0.253
+    delegate_to: localhost

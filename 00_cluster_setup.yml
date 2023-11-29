@@ -29,7 +29,6 @@
       - {"name": "clus2", "address": "169.254.0.114", "hostname": "192.168.0.102"}
     delegate_to: localhost
 
-      
   - name: Create cluster using URI module
     ansible.builtin.uri:
       url: "https://192.168.0.101/api/cluster"
